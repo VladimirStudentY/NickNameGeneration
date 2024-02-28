@@ -1,11 +1,10 @@
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Создайте генератор текстов и сгенерируйте набор из 100 000 текстов, используя код
  * из описания задачи.                                                                 +
  * Заведите в статических полях три счётчика — по одному для длин 3, 4 и 5.             +
- * Заведите три потока — по одному на каждый критерий «красоты» слова.
+ * Заведите три потока — по одному на каждый критерий «красоты» слова.!!!!!!!****
  * Каждый поток проверяет все тексты на «красоту» и увеличивает счётчик нужной длины,
  * если текст соответствует критериям.
  * После окончания работы всех потоков выведите результаты на экран.
@@ -26,106 +25,48 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 
 public class Main {
-    static AtomicInteger length_3 = new AtomicInteger(0);
-    static AtomicInteger length_4 = new AtomicInteger(0);
-    static AtomicInteger length_5 = new AtomicInteger(0);
-
-    static String[] texts = new String[100_000];
-    static Runnable wordSearch_3 = new Runnable() {
-        @Override
-        public void run() {
-            for (int i = 0; i < texts.length; i++) {
-                if (isWordPalindrome(texts[i]) || letterGrowth(texts[i])) {
-                    if (texts[i].length() == 3) {
-                        length_3.addAndGet(1);
-                        //    System.out.println(texts[i] + " " + length_3);
-                    }
-                }
-            }
-        }
-    };
-    static Runnable wordSearch_4 = new Runnable() {
-        @Override
-        public void run() {
-            for (int i = 0; i < texts.length; i++) {
-                if (isWordPalindrome(texts[i]) || letterGrowth(texts[i])) {
-                    if (texts[i].length() == 4) {
-                        length_4.addAndGet(1);
-                        // System.out.println(texts[i] + " " + length_4);
-                    }
-                }
-            }
-        }
-    };
-    static Runnable wordSearch_5 = new Runnable() {
-        @Override
-        public void run() {
-            for (int i = 0; i < texts.length; i++) {
-                if (isWordPalindrome(texts[i]) || letterGrowth(texts[i])) {
-                    if (texts[i].length() == 5) {
-                        length_5.addAndGet(1);
-                        // System.out.println(texts[i] + " " + length_5);
-                    }
-                }
-            }
-        }
-    };
 
     public static void main(String[] args) throws InterruptedException {
-        arrayFilling();
-        System.out.println();
+        Random random = new Random();
+        String[] texts = new String[100_000];
+        for (int i = 0; i < texts.length; i++) {
+            texts[i] = SpecialClass.generateText("abc", 3 + random.nextInt(3));
+        }
+
+        Runnable wordSearch_3 = () -> {
+            for (String text : texts) {
+                if (SpecialClass.isPolindrome(text))
+                    SpecialClass.incrementCounter(text.length());
+            }
+        };
         Thread thread_3 = new Thread(wordSearch_3);
-        Thread thread_4 = new Thread(wordSearch_4);
-        Thread thread_5 = new Thread(wordSearch_5);
         thread_3.start();
+
+        Runnable wordSearch_4 = () -> {
+            for (String text : texts) {
+                if (SpecialClass.isSameChar(text))
+                    SpecialClass.incrementCounter(text.length());
+            }
+        };
+        Thread thread_4 = new Thread(wordSearch_4);
         thread_4.start();
+
+        Runnable wordSearch_5 = () -> {
+            for (String text : texts) {
+                if (SpecialClass.isAscendingOrder(text) && SpecialClass.isSameChar(text))
+                    SpecialClass.incrementCounter(text.length());
+            }
+        };
+        Thread thread_5 = new Thread(wordSearch_5);
         thread_5.start();
+
         thread_3.join();
         thread_4.join();
         thread_5.join();
-        System.out.print(" Красивых слов с длиной 3: " + length_3 + " \n");
-        System.out.print(" Красивых слов с длиной 4: " + length_4 + " \n");
-        System.out.print(" Красивых слов с длиной 5: " + length_5 + " \n");
-    }
 
-    public static String generateText(String letters, int length) {
-        Random random = new Random();
-        StringBuilder text = new StringBuilder();
-        for (int i = 0; i < length; i++) {
-            text.append(letters.charAt(random.nextInt(letters.length())));
-        }
-        return text.toString();
-    }
+        System.out.print(" Красивых слов с длиной 3: " + SpecialClass.length_3 + " \n");
+        System.out.print(" Красивых слов с длиной 4: " + SpecialClass.length_4 + " \n");
+        System.out.print(" Красивых слов с длиной 5: " + SpecialClass.length_5 + " \n");
 
-    public static void arrayFilling() {
-        Random random = new Random();
-        for (int i = 0; i < texts.length; i++) {
-            texts[i] = generateText("abc", 3 + random.nextInt(3));
-        }
-    }
-
-    private static boolean isWordPalindrome(String word) {
-        var chars = word.toCharArray();
-        var left = 0; // индекс первого символа
-        var right = chars.length - 1; // индекс последнего символа
-        while (left < right) { // пока не дошли до середины слова
-            if (chars[left] != chars[right]) {
-                return false;
-            }
-            left++;
-            right--;
-        }
-        return true;
-    }
-
-    private static boolean letterGrowth(String word) {
-        if (word == null || word.length() < 2) {
-            return false;
-        }
-        for (int i = 1; i < word.length(); i++) {
-            if (word.charAt(i) < word.charAt(i - 1))
-                return false;
-        }
-        return true;
     }
 }
